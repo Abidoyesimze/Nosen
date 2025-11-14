@@ -4,26 +4,30 @@ require("dotenv").config();
 async function main() {
   const [deployer] = await hre.ethers.getSigners();
 
-  console.log("Deploying contracts with account:", deployer.address);
+  console.log("🚀 Deploying contracts with account:", deployer.address);
 
-  // Deploy Nosen contract (no constructor args)
-  const Nosen = await hre.ethers.deployContract("Nosen");
-  await Nosen.waitForDeployment();
+  // 1. Get contract factory
+  const NosenFactory = await hre.ethers.getContractFactory("Nosen");
 
-  console.log("✅ Nosen Contract Deployed at:", await Nosen.getAddress());
+  // 2. Deploy contract
+  const nosen = await NosenFactory.deploy();
+
+  // 3. Wait for deployment
+  await nosen.waitForDeployment();
+
+  console.log("✅ Nosen Contract Deployed at:", await nosen.getAddress());
   console.log("");
 
-  // Optional: Verify contracts on Etherscan (only if network is not localhost/hardhat)
+  // Optional: Verify contract
   if (hre.network.name !== "hardhat" && hre.network.name !== "localhost") {
     console.log("🔍 Verifying contract...");
     try {
       await hre.run("verify:verify", {
-        address: await Nosen.getAddress(),
-        constructorArguments: [], // no args
+        address: await nosen.getAddress(),
         contract: "contracts/Nosen.sol:Nosen",
       });
     } catch (err) {
-      console.log("Verification failed:", err.message);
+      console.log("❌ Verification failed:", err.message);
     }
   } else {
     console.log("⏩ Skipping verification on local network");

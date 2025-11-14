@@ -1,10 +1,17 @@
 require("@nomicfoundation/hardhat-toolbox");
-//require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
-//require("hardhat-deploy");
 
 module.exports = {
-  solidity: "0.8.28",
+  solidity: {
+    version: "0.8.28",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200,
+      },
+      viaIR: true, // <-- Put viaIR inside settings
+    },
+  },
   networks: {
     "lisk-sepolia": {
       url: "https://rpc.sepolia-api.lisk.com",
