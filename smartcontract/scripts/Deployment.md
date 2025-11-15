@@ -1,0 +1,3 @@
+=== Deployment Summary ===
+MultiSigFactory: 0xBe84f02eAD3968cE4330fA371b9A19B0819E3Bb8
+PayrollPlatform: 0x45CFFa961b1DE99A54DfBD127239Ce2be774Ab84
