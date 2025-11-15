@@ -20,6 +20,11 @@
 # production
 /build
 
+# smart contracts
+/smartcontract/node_modules
+/smartcontract/cache
+/smartcontract/artifacts
+
 # misc
 .DS_Store
 *.pem

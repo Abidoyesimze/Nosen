@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.23;
 
-import "./MultiSigWallet.sol";
+import "./PayrollMultiSigWallet.sol";
 
 contract MultiSigFactory {
+    address public immutable usdcToken;
+
     // Event for wallet creation
     event WalletCreated(
         address indexed creator,
@@ -15,6 +17,11 @@ contract MultiSigFactory {
     // Mapping of organization => list of wallets they created
     mapping(address => address[]) public orgWallets;
 
+    constructor(address _usdcToken) {
+        require(_usdcToken != address(0), "Factory: invalid USDC");
+        usdcToken = _usdcToken;
+    }
+
     /**
      * @dev Create a new MultiSigWallet for an organization
      * @param _signers Array of signer addresses
@@ -25,13 +32,22 @@ contract MultiSigFactory {
         uint256 _threshold
     ) external returns (address walletAddress) {
         // Deploy new MultiSigWallet
-        MultiSigWallet wallet = new MultiSigWallet(_signers, _threshold);
+        PayrollMultiSigWallet wallet = new PayrollMultiSigWallet(
+            _signers,
+            _threshold,
+            usdcToken
+        );
 
         // Store in registry
         orgWallets[msg.sender].push(address(wallet));
 
         // Emit event
-        emit WalletCreated(msg.sender, address(wallet), _signers, _threshold);
+        emit WalletCreated(
+            msg.sender,
+            address(wallet),
+            _signers,
+            _threshold
+        );
 
         return address(wallet);
     }
