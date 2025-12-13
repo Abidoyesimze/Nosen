@@ -5,14 +5,24 @@ import { Building2, User, ArrowRight, CheckCircle2, X } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useRole } from '../contexts/RoleContext';
+import { useAccount } from 'wagmi';
+import { useIsEmployerRegistered, useIsEmployeeRegistered } from '../../hooks/usePayroll';
+import RegisterOnContract from '../components/RegisterOnContract';
 
 const SetupRoleContent = () => {
   const { theme } = useTheme();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setRole } = useRole();
+  const { address, isConnected } = useAccount();
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showRegistration, setShowRegistration] = useState(false);
+  const [registrationRole, setRegistrationRole] = useState<'employer' | 'employee' | null>(null);
+
+  // Check registration status if wallet is connected
+  const { data: isEmployerRegistered, isLoading: checkingEmployer } = useIsEmployerRegistered();
+  const { data: isEmployeeRegistered, isLoading: checkingEmployee } = useIsEmployeeRegistered();
 
   useEffect(() => {
     const role = searchParams.get('role');
@@ -21,17 +31,61 @@ const SetupRoleContent = () => {
     }
   }, [searchParams]);
 
+  // Check if user is already registered in the opposite role
+  useEffect(() => {
+    if (isConnected && address) {
+      if (selectedRole === 'employer' && isEmployeeRegistered) {
+        alert('This address is already registered as an employee. Each address can only have one role.');
+        router.push('/');
+        return;
+      }
+      if (selectedRole === 'employee' && isEmployerRegistered) {
+        alert('This address is already registered as an employer. Each address can only have one role.');
+        router.push('/');
+        return;
+      }
+    }
+  }, [isConnected, address, selectedRole, isEmployerRegistered, isEmployeeRegistered, router]);
+
   const handleRoleSelect = (role: 'employer' | 'employee') => {
-    setIsAnimating(true);
+    if (!isConnected) {
+      alert('Please connect your wallet first');
+      return;
+    }
+
     setSelectedRole(role);
     setRole(role); // Save role to context
-    setTimeout(() => {
+
+    // Check if already registered
+    const isRegistered = role === 'employer' ? isEmployerRegistered : isEmployeeRegistered;
+    const isLoading = role === 'employer' ? checkingEmployer : checkingEmployee;
+
+    if (isLoading) {
+      // Wait for check to complete
+      return;
+    }
+
+    if (isRegistered) {
+      // Already registered, go to dashboard
       if (role === 'employer') {
         router.push('/dashboard/employer/setup');
       } else {
         router.push('/dashboard/employee');
       }
-    }, 500);
+    } else {
+      // Not registered, show registration form
+      setRegistrationRole(role);
+      setShowRegistration(true);
+    }
+  };
+
+  const handleRegistrationComplete = () => {
+    setShowRegistration(false);
+    if (registrationRole === 'employer') {
+      router.push('/dashboard/employer/setup');
+    } else {
+      router.push('/dashboard/employee');
+    }
   };
 
   const containerVariants = {
@@ -57,6 +111,16 @@ const SetupRoleContent = () => {
       }
     }
   };
+
+  // Show registration form if needed
+  if (showRegistration && registrationRole) {
+    return (
+      <RegisterOnContract
+        role={registrationRole}
+        onRegistrationComplete={handleRegistrationComplete}
+      />
+    );
+  }
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-950' : 'bg-white'}`}>
