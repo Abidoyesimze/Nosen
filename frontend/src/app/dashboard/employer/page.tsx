@@ -33,7 +33,6 @@ const EmployerDashboard = () => {
   const { address, isConnected } = useAccount();
   const publicClient = usePublicClient();
   const router = useRouter();
-  const { isSetupComplete } = useSetup();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   
