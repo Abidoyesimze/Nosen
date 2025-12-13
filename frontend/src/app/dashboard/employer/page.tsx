@@ -12,7 +12,8 @@ import {
   MapPin,
   ExternalLink,
   Copy,
-  CheckCircle2
+  CheckCircle2,
+  Info
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { RoleGuard } from '../../components/RoleGuard';
@@ -21,11 +22,10 @@ import EmployerSidebar from '../../components/EmployerSidebar';
 import { useAccount, usePublicClient, useBalance } from 'wagmi';
 import { useRouter } from 'next/navigation';
 import ConnectWallet from '../../components/ConnectWallet';
-import { useSetup } from '../../contexts/SetupContext';
 import { useEmployerProfile } from '../../../hooks/usePayroll';
 import { formatEmployer } from '../../../services/payrollService';
 import { useMultisigWalletData } from '../../../hooks/useMultisigWallet';
-import { Address, formatEther } from 'viem';
+import { Address, formatEther, formatUnits } from 'viem';
 import { toast } from 'react-toastify';
 
 const EmployerDashboard = () => {
@@ -51,13 +51,8 @@ const EmployerDashboard = () => {
     employeeCount,
     monthlyPayroll,
     transactionCount,
+    employees,
   } = useMultisigWalletData(employer?.wallet as Address);
-
-  useEffect(() => {
-    if (!isSetupComplete()) {
-      router.push('/dashboard/employer/setup');
-    }
-  }, [isSetupComplete, router]);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -96,22 +91,6 @@ const EmployerDashboard = () => {
     }
   ];
 
-  if (!isSetupComplete()) {
-    return (
-      <RoleGuard allowedRole="employer">
-        <div className={`min-h-screen ${theme === 'dark' ? 'bg-slate-950' : 'bg-slate-50'}`}>
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-              <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-                Redirecting to setup...
-              </p>
-            </div>
-          </div>
-        </div>
-      </RoleGuard>
-    );
-  }
 
   if (!isConnected) {
     return (
@@ -201,33 +180,42 @@ const EmployerDashboard = () => {
                                   {employer.location}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-2 text-sm mt-3">
-                                <Wallet className={`w-4 h-4 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`} />
-                                <span className={`font-mono text-xs ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
-                                  {employer.wallet}
-                                </span>
-                                <button
-                                  onClick={() => copyToClipboard(employer.wallet, 'Wallet address')}
-                                  className={`p-1 rounded hover:bg-slate-700 transition-colors ${
-                                    theme === 'dark' ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700'
-                                  }`}
-                                >
-                                  {copiedAddress === employer.wallet ? (
-                                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                  ) : (
-                                    <Copy className="w-4 h-4" />
-                                  )}
-                                </button>
-                                <a
-                                  href={`https://sepolia-blockscout.lisk.com/address/${employer.wallet}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={`p-1 rounded hover:bg-slate-700 transition-colors ${
-                                    theme === 'dark' ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700'
-                                  }`}
-                                >
-                                  <ExternalLink className="w-4 h-4" />
-                                </a>
+                              <div className={`mt-4 p-3 rounded-lg border ${
+                                theme === 'dark' ? 'bg-slate-800 border-slate-600' : 'bg-blue-50 border-blue-200'
+                              }`}>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Wallet className={`w-4 h-4 ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'}`} />
+                                  <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                                    Multisig Wallet Address
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className={`font-mono text-xs ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
+                                    {employer.wallet}
+                                  </span>
+                                  <button
+                                    onClick={() => copyToClipboard(employer.wallet, 'Wallet address')}
+                                    className={`p-1 rounded hover:bg-slate-700 transition-colors ${
+                                      theme === 'dark' ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700'
+                                    }`}
+                                  >
+                                    {copiedAddress === employer.wallet ? (
+                                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                    ) : (
+                                      <Copy className="w-4 h-4" />
+                                    )}
+                                  </button>
+                                  <a
+                                    href={`https://sepolia-blockscout.lisk.com/address/${employer.wallet}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`p-1 rounded hover:bg-slate-700 transition-colors ${
+                                      theme === 'dark' ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700'
+                                    }`}
+                                  >
+                                    <ExternalLink className="w-4 h-4" />
+                                  </a>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -276,6 +264,91 @@ const EmployerDashboard = () => {
                       </div>
                     </motion.div>
                   ))}
+                </div>
+
+                {/* Employees Section */}
+                <div className={`rounded-xl p-6 border mb-8 ${
+                  theme === 'dark' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200 shadow-sm'
+                }`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                      Employees
+                    </h2>
+                    <button
+                      onClick={() => router.push('/dashboard/employer/employees')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        theme === 'dark'
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                          : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                      }`}
+                    >
+                      Add Employee
+                    </button>
+                  </div>
+                  {employees && employees.length > 0 ? (
+                    <div className="space-y-3">
+                      {employees.slice(0, 5).map((emp: any, index: number) => (
+                        <div
+                          key={emp.id}
+                          className={`p-4 rounded-lg border ${
+                            theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className={`font-medium ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                                Employee #{emp.id}
+                              </p>
+                              <p className={`text-sm font-mono mt-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                                {emp.wallet}
+                              </p>
+                              <div className="flex items-center gap-4 mt-2">
+                                <span className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                                  Salary: ${formatUnits(emp.salary, 6)} USDC
+                                </span>
+                                <span className={`text-xs px-2 py-1 rounded ${
+                                  emp.active
+                                    ? theme === 'dark' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-700'
+                                    : theme === 'dark' ? 'bg-slate-700 text-slate-400' : 'bg-slate-200 text-slate-600'
+                                }`}>
+                                  {emp.active ? 'Active' : 'Inactive'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {employees.length > 5 && (
+                        <button
+                          onClick={() => router.push('/dashboard/employer/employees')}
+                          className={`w-full py-2 text-sm font-medium rounded-lg border ${
+                            theme === 'dark'
+                              ? 'border-slate-700 text-slate-300 hover:bg-slate-800'
+                              : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          View All {employees.length} Employees
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Users className={`w-12 h-12 mx-auto mb-4 ${theme === 'dark' ? 'text-slate-600' : 'text-slate-400'}`} />
+                      <p className={`mb-4 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                        No employees added yet
+                      </p>
+                      <button
+                        onClick={() => router.push('/dashboard/employer/employees')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          theme === 'dark'
+                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                            : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                        }`}
+                      >
+                        Add Your First Employee
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Quick Actions */}
