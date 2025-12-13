@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { RoleGuard } from '../../components/RoleGuard';
+import RegistrationGuard from '../../components/RegistrationGuard';
 import EmployerSidebar from '../../components/EmployerSidebar';
 import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
@@ -77,6 +78,7 @@ const EmployerDashboard = () => {
 
   return (
     <RoleGuard allowedRole="employer">
+      <RegistrationGuard role="employer">
       <div className={`min-h-screen ${theme === 'dark' ? 'bg-slate-950' : 'bg-slate-50'}`}>
         <EmployerSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         
@@ -150,6 +152,7 @@ const EmployerDashboard = () => {
           </main>
         </div>
       </div>
+      </RegistrationGuard>
     </RoleGuard>
   );
 };

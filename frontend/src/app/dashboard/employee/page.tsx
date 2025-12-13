@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { RoleGuard } from '../../components/RoleGuard';
+import RegistrationGuard from '../../components/RegistrationGuard';
 import EmployeeSidebar from '../../components/EmployeeSidebar';
 import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
@@ -29,29 +30,9 @@ const EmployeeDashboard = () => {
     { label: 'Transactions', value: '0', icon: <History className="w-5 h-5" /> }
   ];
 
-  if (!isConnected) {
-    return (
-      <RoleGuard allowedRole="employee">
-        <div className={`min-h-screen ${theme === 'dark' ? 'bg-slate-950' : 'bg-slate-50'}`}>
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
-              <Wallet className="w-16 h-16 mx-auto mb-4 text-slate-400" />
-              <h2 className={`text-2xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                Connect Your Wallet
-              </h2>
-              <p className={`mb-6 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-                Please connect your wallet to access the employee dashboard
-              </p>
-              <ConnectWallet />
-            </div>
-          </div>
-        </div>
-      </RoleGuard>
-    );
-  }
-
   return (
     <RoleGuard allowedRole="employee">
+      <RegistrationGuard role="employee">
       <div className={`min-h-screen ${theme === 'dark' ? 'bg-slate-950' : 'bg-slate-50'}`}>
         <EmployeeSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         
@@ -149,6 +130,7 @@ const EmployeeDashboard = () => {
           </main>
         </div>
       </div>
+      </RegistrationGuard>
     </RoleGuard>
   );
 };
