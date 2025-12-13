@@ -21,14 +21,6 @@ if (!projectId) {
 // Create a query client
 const queryClient = new QueryClient();
 
-// Metadata for your application
-const metadata = {
-  name: 'Nosen',
-  description: 'Web3 Income Verification Platform',
-  url: 'https://nosen.app', // Update with your actual URL
-  icons: ['https://nosen.app/icon.png'] // Update with your actual icon
-};
-
 // Define the networks you want to support
 const networks = [liskSepolia] as const;
 
@@ -39,16 +31,17 @@ const wagmiAdapter = new WagmiAdapter({
   ssr: true,
 });
 
-// Initialize AppKit
+// Initialize AppKit with simplified configuration
 createAppKit({
   adapters: [wagmiAdapter],
   networks,
   projectId,
-  metadata,
-  features: {
-    analytics: true,
+  metadata: {
+    name: 'Nosen',
+    description: 'Web3 Payroll Platform',
+    url: typeof window !== 'undefined' ? window.location.origin : 'https://nosen.app',
+    icons: [],
   },
-  // Set default chain to Lisk Sepolia
   defaultChain: liskSepolia,
 });
 
