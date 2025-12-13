@@ -17,6 +17,7 @@ import {
   Wallet
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useEmployerProfile } from '../../hooks/usePayroll';
 
 interface EmployerSidebarProps {
   sidebarOpen: boolean;
@@ -26,6 +27,7 @@ interface EmployerSidebarProps {
 const EmployerSidebar: React.FC<EmployerSidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
   const pathname = usePathname();
   const { theme } = useTheme();
+  const { data: employer } = useEmployerProfile();
 
   const navigation = [
     {
@@ -98,7 +100,9 @@ const EmployerSidebar: React.FC<EmployerSidebarProps> = ({ sidebarOpen, setSideb
       >
         <div className="flex flex-col h-full">
           {/* Logo and close button */}
-          <div className="flex items-center justify-between p-6 border-b border-slate-700">
+          <div className={`flex items-center justify-between p-6 border-b ${
+            theme === 'dark' ? 'border-slate-700' : 'border-slate-200'
+          }`}>
             <Link href="/dashboard/employer" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">N</span>
@@ -114,6 +118,35 @@ const EmployerSidebar: React.FC<EmployerSidebarProps> = ({ sidebarOpen, setSideb
               <X className="w-6 h-6" />
             </button>
           </div>
+
+          {/* Company Profile Section */}
+          {employer && (
+            <div className={`p-4 border-b ${
+              theme === 'dark' ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-50'
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${
+                  theme === 'dark' ? 'bg-emerald-500/10' : 'bg-emerald-100'
+                }`}>
+                  <Building2 className={`w-5 h-5 ${
+                    theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'
+                  }`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-semibold truncate ${
+                    theme === 'dark' ? 'text-white' : 'text-slate-900'
+                  }`}>
+                    {employer.companyName}
+                  </p>
+                  <p className={`text-xs truncate ${
+                    theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
+                  }`}>
+                    {employer.location}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -140,7 +173,9 @@ const EmployerSidebar: React.FC<EmployerSidebarProps> = ({ sidebarOpen, setSideb
           </nav>
 
           {/* Bottom navigation */}
-          <div className="p-4 border-t border-slate-700">
+          <div className={`p-4 border-t ${
+            theme === 'dark' ? 'border-slate-700' : 'border-slate-200'
+          }`}>
             {bottomNavigation.map((item) => {
               const Icon = item.icon;
               return (

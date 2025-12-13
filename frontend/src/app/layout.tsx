@@ -9,6 +9,7 @@ import { ProfileProvider } from "./contexts/ProfileContext";
 import { RoleProvider } from "./contexts/RoleContext";
 import { SetupProviderWrapper } from "./components/SetupProviderWrapper";
 import NetworkGuard from "./components/NetworkGuard";
+import ToastProvider from "./components/ToastProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,6 +45,7 @@ export default function RootLayout({
                     <NetworkGuard>
                       <Navbar />
                       {children}
+                      <ToastProvider />
                     </NetworkGuard>
                   </ThemeProvider>
                 </SetupProviderWrapper>

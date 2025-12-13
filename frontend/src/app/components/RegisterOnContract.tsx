@@ -6,6 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useRegisterEmployer, useRegisterEmployee, useIsEmployerRegistered, useIsEmployeeRegistered } from '../../hooks/usePayroll';
 import { useWaitForTransaction } from '../../hooks/usePayroll';
 import { Building2, User, Loader2, CheckCircle2, AlertCircle, ArrowRight, X } from 'lucide-react';
+import { toast } from 'react-toastify';
 import type { RegisterEmployerParams, RegisterEmployeeParams } from '../../types/payroll';
 
 interface RegisterOnContractProps {
@@ -30,6 +31,9 @@ const RegisterOnContract: React.FC<RegisterOnContractProps> = ({ role, onRegistr
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
   const { isLoading: isWaiting, isSuccess: txSuccess, isError: txError } = useWaitForTransaction(txHash);
   
+  // Check if processing (mutation, waiting for transaction, or verifying registration)
+  const isProcessing = registerEmployer.isPending || registerEmployee.isPending || isWaiting || isVerifyingRegistration;
+  
   // Form state for employer
   const [employerForm, setEmployerForm] = useState<RegisterEmployerParams>({
     companyName: '',
@@ -52,22 +56,70 @@ const RegisterOnContract: React.FC<RegisterOnContractProps> = ({ role, onRegistr
   // Check if already registered
   const isRegistered = role === 'employer' ? isEmployerRegistered : isEmployeeRegistered;
   const isLoading = role === 'employer' ? checkingEmployer : checkingEmployee;
+  const [isVerifyingRegistration, setIsVerifyingRegistration] = useState(false);
 
   // If already registered, call onRegistrationComplete
   useEffect(() => {
-    if (!isLoading && isRegistered) {
+    if (!isLoading && isRegistered && !isVerifyingRegistration) {
       onRegistrationComplete();
     }
-  }, [isRegistered, isLoading, onRegistrationComplete]);
+  }, [isRegistered, isLoading, isVerifyingRegistration, onRegistrationComplete]);
 
-  // If transaction succeeds, call onRegistrationComplete
+  // Handle transaction error
   useEffect(() => {
-    if (txSuccess) {
-      setTimeout(() => {
-        onRegistrationComplete();
-      }, 2000); // Wait 2 seconds for contract state to update
+    if (txError) {
+      toast.error('Transaction failed. Please try again.', {
+        position: 'top-right',
+        autoClose: 5000,
+      });
+      setIsVerifyingRegistration(false);
     }
-  }, [txSuccess, onRegistrationComplete]);
+  }, [txError]);
+
+  // If transaction succeeds, show success toast and start verifying registration
+  useEffect(() => {
+    if (txSuccess && txHash) {
+      toast.success('Transaction confirmed! Verifying your registration...', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+      setIsVerifyingRegistration(true);
+      
+      // Poll for registration status update
+      const checkInterval = setInterval(async () => {
+        try {
+          // The hooks will automatically refetch, so we just wait
+          const currentStatus = role === 'employer' ? isEmployerRegistered : isEmployeeRegistered;
+          if (currentStatus) {
+            clearInterval(checkInterval);
+            setIsVerifyingRegistration(false);
+            toast.success(`Successfully registered as ${role === 'employer' ? 'employer' : 'employee'}!`, {
+              position: 'top-right',
+              autoClose: 3000,
+            });
+            // Small delay before redirect to show success message
+            setTimeout(() => {
+              onRegistrationComplete();
+            }, 1500);
+          }
+        } catch (error) {
+          console.error('Error checking registration:', error);
+        }
+      }, 2000); // Check every 2 seconds
+
+      // Timeout after 30 seconds
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        setIsVerifyingRegistration(false);
+        toast.info('Registration may take a moment. Please refresh the page.', {
+          position: 'top-right',
+          autoClose: 5000,
+        });
+      }, 30000);
+
+      return () => clearInterval(checkInterval);
+    }
+  }, [txSuccess, txHash, role, isEmployerRegistered, isEmployeeRegistered, onRegistrationComplete]);
 
   // Add signer to employer form
   const addSigner = () => {
@@ -146,16 +198,28 @@ const RegisterOnContract: React.FC<RegisterOnContractProps> = ({ role, onRegistr
   // Handle registration
   const handleRegister = async () => {
     if (!isConnected || !address) {
-      alert('Please connect your wallet first');
+      toast.error('Please connect your wallet first', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
       return;
     }
 
     if (!validateForm()) {
+      toast.error('Please fix the form errors before submitting', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
       return;
     }
 
     try {
       let hash: `0x${string}`;
+      
+      toast.info('Sending transaction...', {
+        position: 'top-right',
+        autoClose: 2000,
+      });
       
       if (role === 'employer') {
         // Add current address as signer if not already included
@@ -172,9 +236,17 @@ const RegisterOnContract: React.FC<RegisterOnContractProps> = ({ role, onRegistr
       }
       
       setTxHash(hash);
+      toast.info('Transaction submitted! Waiting for confirmation...', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
     } catch (error: any) {
       console.error('Registration error:', error);
-      alert(error.message || 'Failed to register. Please try again.');
+      const errorMessage = error.message || 'Failed to register. Please try again.';
+      toast.error(errorMessage, {
+        position: 'top-right',
+        autoClose: 5000,
+      });
     }
   };
 
@@ -226,6 +298,31 @@ const RegisterOnContract: React.FC<RegisterOnContractProps> = ({ role, onRegistr
     );
   }
 
+  // Show loading screen while verifying registration
+  if (isVerifyingRegistration) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-slate-950' : 'bg-white'}`}>
+        <div className={`max-w-md w-full mx-4 p-8 rounded-xl border ${
+          theme === 'dark' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200 shadow-lg'
+        }`}>
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 animate-spin text-emerald-500 mx-auto mb-4" />
+            <h2 className={`text-2xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+              Verifying Registration
+            </h2>
+            <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-600 mb-4'}>
+              Your transaction has been confirmed. We're verifying your registration on the blockchain...
+            </p>
+            <div className="flex items-center justify-center gap-2 text-sm text-slate-500">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>This may take a few moments</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen py-12 px-4 ${theme === 'dark' ? 'bg-slate-950' : 'bg-white'}`}>
       <div className="max-w-2xl mx-auto">
@@ -252,26 +349,6 @@ const RegisterOnContract: React.FC<RegisterOnContractProps> = ({ role, onRegistr
               </p>
             </div>
           </div>
-
-          {/* Success Message */}
-          {txSuccess && (
-            <div className="mb-6 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
-              <div className="flex items-center gap-2 text-emerald-500">
-                <CheckCircle2 className="w-5 h-5" />
-                <span className="font-medium">Registration successful! Redirecting...</span>
-              </div>
-            </div>
-          )}
-
-          {/* Error Message */}
-          {txError && (
-            <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30">
-              <div className="flex items-center gap-2 text-red-500">
-                <AlertCircle className="w-5 h-5" />
-                <span className="font-medium">Transaction failed. Please try again.</span>
-              </div>
-            </div>
-          )}
 
           {/* Employer Form */}
           {role === 'employer' && (
