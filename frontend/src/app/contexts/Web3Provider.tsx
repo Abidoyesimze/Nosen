@@ -48,6 +48,8 @@ createAppKit({
   features: {
     analytics: true,
   },
+  // Set default chain to Lisk Sepolia
+  defaultChain: liskSepolia,
 });
 
 export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {

@@ -8,6 +8,7 @@ import { WalletProvider } from "./contexts/WalletContext";
 import { ProfileProvider } from "./contexts/ProfileContext";
 import { RoleProvider } from "./contexts/RoleContext";
 import { SetupProviderWrapper } from "./components/SetupProviderWrapper";
+import NetworkGuard from "./components/NetworkGuard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,8 +41,10 @@ export default function RootLayout({
               <RoleProvider>
                 <SetupProviderWrapper>
                   <ThemeProvider>
-                    <Navbar />
-                    {children}
+                    <NetworkGuard>
+                      <Navbar />
+                      {children}
+                    </NetworkGuard>
                   </ThemeProvider>
                 </SetupProviderWrapper>
               </RoleProvider>
