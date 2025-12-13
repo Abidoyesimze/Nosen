@@ -50,6 +50,17 @@ const MULTISIG_WALLET_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
+  {
+    inputs: [],
+    name: 'payrollConfig',
+    outputs: [
+      { internalType: 'uint8', name: 'frequency', type: 'uint8' },
+      { internalType: 'uint256', name: 'nextExecution', type: 'uint256' },
+      { internalType: 'bool', name: 'active', type: 'bool' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
 ] as const;
 
 /**
@@ -102,6 +113,20 @@ export function useMultisigTransactionCount(walletAddress?: Address) {
     address: walletAddress,
     abi: MULTISIG_WALLET_ABI,
     functionName: 'getTransactionCount',
+    query: {
+      enabled: !!walletAddress,
+    },
+  });
+}
+
+/**
+ * Hook to get payroll config from multisig wallet
+ */
+export function useMultisigPayrollConfig(walletAddress?: Address) {
+  return useReadContract({
+    address: walletAddress,
+    abi: MULTISIG_WALLET_ABI,
+    functionName: 'payrollConfig',
     query: {
       enabled: !!walletAddress,
     },
