@@ -30,9 +30,6 @@ const RegisterOnContract: React.FC<RegisterOnContractProps> = ({ role, onRegistr
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
   const { isLoading: isWaiting, isSuccess: txSuccess, isError: txError } = useWaitForTransaction(txHash);
   
-  // Also check mutation states
-  const isProcessing = registerEmployer.isPending || registerEmployee.isPending || isWaiting;
-  
   // Form state for employer
   const [employerForm, setEmployerForm] = useState<RegisterEmployerParams>({
     companyName: '',
@@ -228,8 +225,6 @@ const RegisterOnContract: React.FC<RegisterOnContractProps> = ({ role, onRegistr
       </div>
     );
   }
-
-  const isProcessing = registerEmployer.isPending || registerEmployee.isPending || isWaiting;
 
   return (
     <div className={`min-h-screen py-12 px-4 ${theme === 'dark' ? 'bg-slate-950' : 'bg-white'}`}>
