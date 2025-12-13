@@ -14,7 +14,8 @@ import {
   Settings,
   Menu,
   X,
-  Wallet
+  Wallet,
+  Calendar
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useEmployerProfile } from '../../hooks/usePayroll';
@@ -59,6 +60,12 @@ const EmployerSidebar: React.FC<EmployerSidebarProps> = ({ sidebarOpen, setSideb
       href: '/dashboard/employer/employees',
       icon: UserPlus,
       current: pathname === '/dashboard/employer/employees'
+    },
+    {
+      name: 'Payroll Config',
+      href: '/dashboard/employer/payroll',
+      icon: Calendar,
+      current: pathname === '/dashboard/employer/payroll'
     },
     {
       name: 'Transaction History',
