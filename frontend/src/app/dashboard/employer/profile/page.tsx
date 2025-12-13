@@ -8,7 +8,7 @@ import { RoleGuard } from '../../../components/RoleGuard';
 import RegistrationGuard from '../../../components/RegistrationGuard';
 import EmployerSidebar from '../../../components/EmployerSidebar';
 import { useRouter } from 'next/navigation';
-import { useEmployerProfile } from '../../../hooks/usePayroll';
+import { useEmployerProfile } from '../../../../hooks/usePayroll';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'react-toastify';
 
