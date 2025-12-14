@@ -24,13 +24,29 @@ import {
 } from 'lucide-react';
 import { useTheme } from './contexts/ThemeContext';
 import { useRouter } from 'next/navigation';
+import { useAccount } from 'wagmi';
+import { useIsEmployerRegistered, useIsEmployeeRegistered } from '../hooks/usePayroll';
 
 const NosenLanding = () => {
   const { theme } = useTheme();
   const router = useRouter();
+  const { address, isConnected } = useAccount();
+  const { data: isEmployerRegistered, isLoading: checkingEmployer } = useIsEmployerRegistered();
+  const { data: isEmployeeRegistered, isLoading: checkingEmployee } = useIsEmployeeRegistered();
   const heroRef = useRef(null);
   const heroInView = useInView(heroRef, { once: true, amount: 0.3 });
   const heroControls = useAnimation();
+
+  // Redirect registered users to their dashboard
+  useEffect(() => {
+    if (isConnected && address && !checkingEmployer && !checkingEmployee) {
+      if (isEmployerRegistered) {
+        router.push('/dashboard/employer');
+      } else if (isEmployeeRegistered) {
+        router.push('/dashboard/employee');
+      }
+    }
+  }, [isConnected, address, isEmployerRegistered, isEmployeeRegistered, checkingEmployer, checkingEmployee, router]);
 
   useEffect(() => {
     if (heroInView) {
@@ -223,15 +239,33 @@ const NosenLanding = () => {
               variants={itemVariants}
               className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
             >
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => router.push('/setup-role')}
-                className="px-8 py-4 rounded-xl font-semibold text-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-lg shadow-emerald-500/50 flex items-center gap-2"
-              >
-                Get Started
-                <ArrowRight className="w-5 h-5" />
-              </motion.button>
+              {isConnected && (isEmployerRegistered || isEmployeeRegistered) ? (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    if (isEmployerRegistered) {
+                      router.push('/dashboard/employer');
+                    } else if (isEmployeeRegistered) {
+                      router.push('/dashboard/employee');
+                    }
+                  }}
+                  className="px-8 py-4 rounded-xl font-semibold text-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-lg shadow-emerald-500/50 flex items-center gap-2"
+                >
+                  Go to Dashboard
+                  <ArrowRight className="w-5 h-5" />
+                </motion.button>
+              ) : (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => router.push('/setup-role')}
+                  className="px-8 py-4 rounded-xl font-semibold text-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-lg shadow-emerald-500/50 flex items-center gap-2"
+                >
+                  Get Started
+                  <ArrowRight className="w-5 h-5" />
+                </motion.button>
+              )}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -624,14 +658,31 @@ const NosenLanding = () => {
             Join forward-thinking companies using blockchain technology for secure, transparent payroll
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => router.push('/setup-role')}
-              className="px-8 py-4 rounded-xl font-bold text-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-lg shadow-emerald-500/50"
-            >
-              Get Started Free
-            </motion.button>
+            {isConnected && (isEmployerRegistered || isEmployeeRegistered) ? (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  if (isEmployerRegistered) {
+                    router.push('/dashboard/employer');
+                  } else if (isEmployeeRegistered) {
+                    router.push('/dashboard/employee');
+                  }
+                }}
+                className="px-8 py-4 rounded-xl font-bold text-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-lg shadow-emerald-500/50"
+              >
+                Go to Dashboard
+              </motion.button>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => router.push('/setup-role')}
+                className="px-8 py-4 rounded-xl font-bold text-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-lg shadow-emerald-500/50"
+              >
+                Get Started Free
+              </motion.button>
+            )}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}

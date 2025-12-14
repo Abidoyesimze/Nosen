@@ -32,7 +32,7 @@ const FundsPage = () => {
       setLoading(false);
       setAmount('');
       updateSetupProgress('fundsCompleted', true);
-      router.push('/dashboard/employer/setup');
+      router.push('/dashboard/employer');
     }, 2000);
   };
 

@@ -24,6 +24,20 @@ const SetupRoleContent = () => {
   const { data: isEmployerRegistered, isLoading: checkingEmployer } = useIsEmployerRegistered();
   const { data: isEmployeeRegistered, isLoading: checkingEmployee } = useIsEmployeeRegistered();
 
+  // Redirect if already registered
+  useEffect(() => {
+    if (isConnected && address && !checkingEmployer && !checkingEmployee) {
+      if (isEmployerRegistered) {
+        router.push('/dashboard/employer');
+        return;
+      }
+      if (isEmployeeRegistered) {
+        router.push('/dashboard/employee');
+        return;
+      }
+    }
+  }, [isConnected, address, isEmployerRegistered, isEmployeeRegistered, checkingEmployer, checkingEmployee, router]);
+
   useEffect(() => {
     const role = searchParams.get('role');
     if (role === 'employer' || role === 'employee') {
@@ -33,7 +47,7 @@ const SetupRoleContent = () => {
 
   // Check if user is already registered in the opposite role
   useEffect(() => {
-    if (isConnected && address) {
+    if (isConnected && address && !checkingEmployer && !checkingEmployee) {
       if (selectedRole === 'employer' && isEmployeeRegistered) {
         alert('This address is already registered as an employee. Each address can only have one role.');
         router.push('/');
@@ -45,7 +59,7 @@ const SetupRoleContent = () => {
         return;
       }
     }
-  }, [isConnected, address, selectedRole, isEmployerRegistered, isEmployeeRegistered, router]);
+  }, [isConnected, address, selectedRole, isEmployerRegistered, isEmployeeRegistered, checkingEmployer, checkingEmployee, router]);
 
   const handleRoleSelect = (role: 'employer' | 'employee') => {
     if (!isConnected) {
@@ -68,7 +82,7 @@ const SetupRoleContent = () => {
     if (isRegistered) {
       // Already registered, go to dashboard
       if (role === 'employer') {
-        router.push('/dashboard/employer/setup');
+        router.push('/dashboard/employer');
       } else {
         router.push('/dashboard/employee');
       }
@@ -82,7 +96,7 @@ const SetupRoleContent = () => {
   const handleRegistrationComplete = () => {
     setShowRegistration(false);
     if (registrationRole === 'employer') {
-      router.push('/dashboard/employer/setup');
+      router.push('/dashboard/employer');
     } else {
       router.push('/dashboard/employee');
     }
@@ -111,6 +125,20 @@ const SetupRoleContent = () => {
       }
     }
   };
+
+  // Show loading while checking registration status
+  if (isConnected && (checkingEmployer || checkingEmployee)) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-slate-950' : 'bg-white'}`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+          <p className={theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}>
+            Checking registration status...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Show registration form if needed
   if (showRegistration && registrationRole) {
